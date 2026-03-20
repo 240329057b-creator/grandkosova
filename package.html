@@ -193,9 +193,14 @@
             </div>
           </div>
 
-          <div class="col-md-3">
+          <div id="discountWrap" class="col-md-3">
             <label for="discountCode" class="form-label">Kodi i Zbritjes</label>
-            <input type="text" id="discountCode" class="form-control" placeholder="Shkruaj kodin" />
+            <input
+              type="text"
+              id="discountCode"
+              class="form-control"
+              placeholder="Shkruaj kodin"
+            />
           </div>
 
           <div class="col-md-12 text-center">
@@ -230,18 +235,20 @@
 
         let total = guests * perPerson;
 
-        const code = document.getElementById("discountCode").value.trim().toUpperCase();
-        let discount = 0;
+        let totalDiscount = 0;
+        if (packageValue !== "custom") {
+          const code = document.getElementById("discountCode").value.trim().toUpperCase();
 
-        if (code.startsWith("DISC")) {
-          let percent = parseInt(code.substring(4));
-          if (!isNaN(percent) && percent >= 1 && percent <= 25) {
-            discount = percent / 100;
+          if (code.startsWith("DISC")) {
+            let percent = parseInt(code.substring(4));
+            if (!isNaN(percent) && percent >= 1 && percent <= 25) {
+              totalDiscount = percent / 100;
+            }
           }
-        }
 
-        if (discount > 0) {
-          total = total - total * discount;
+          if (totalDiscount > 0) {
+            total = total - total * totalDiscount;
+          }
         }
 
         document.getElementById("totalPrice").innerText = total.toFixed(2) + "€";
@@ -255,12 +262,27 @@
         wrap.style.display = packageSelect.value === "custom" ? "block" : "none";
       }
 
+      function syncDiscountUI() {
+        const packageSelect = document.getElementById("package");
+        const wrap = document.getElementById("discountWrap");
+        if (!packageSelect || !wrap) return;
+
+        // When using custom client price, discount code option should disappear.
+        wrap.style.display = packageSelect.value === "custom" ? "none" : "block";
+
+        // Also clear any previously typed code, so it can't affect totals.
+        const codeInput = document.getElementById("discountCode");
+        if (packageSelect.value === "custom" && codeInput) codeInput.value = "";
+      }
+
       document.addEventListener("DOMContentLoaded", function () {
         const packageSelect = document.getElementById("package");
         if (!packageSelect) return;
 
         syncCustomPriceUI();
+        syncDiscountUI();
         packageSelect.addEventListener("change", syncCustomPriceUI);
+        packageSelect.addEventListener("change", syncDiscountUI);
       });
 
       function toggleMenu(id) {
